@@ -170,7 +170,7 @@ public class ReservasView extends javax.swing.JFrame {
                 {null, null, null, null, null}
             },
             new String [] {
-                "ID", "Fecha de Inicio", "Fecha de fin", "Monto Actual", "Monto por Pagar"
+                "ID", "Fecha de Inicio", "Fecha de fin", "Monto Actual", "Monto Total"
             }
         ));
         jScrollPane1.setViewportView(tabla);

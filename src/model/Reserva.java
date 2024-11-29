@@ -35,7 +35,9 @@ public class Reserva {
         this.diasReservados = diasReservados;
         this.trabajador = trabajador;
         this.vehiculo = vehiculo;
-        id = Integer.toString(Math.abs(trabajador.getDni().hashCode()));
+        String dniHash = Integer.toString(Math.abs(trabajador.getDni().hashCode()));
+        long timestamp = System.nanoTime();
+        this.id = String.format("%08d", Math.abs((dniHash + timestamp).hashCode()) % 100_000_000);
 
         cancelado = false;
         calcular(); // Calcula fechaFin al crear la reserva
@@ -52,8 +54,17 @@ public class Reserva {
 
       fechaFin = fechaInicio.plusDays(diasReservados);
     }
+    public String getTrabajadorId() {
+      return trabajador.getDni();
+    }
+    public String getVehiculoId() {
+      return vehiculo.getMatricula();
+    }
     public String getId() {
       return id;
+    }
+    public void setId(String id ) {
+      this.id = id;
     }
     public double getMontoActual () {
       return montoActual;

@@ -9,7 +9,8 @@ public class Trabajadores extends Persona {
     private String dni;
     private String tipoTrabajador;
 
-    public Trabajadores(String nombre, String apellidos, String email, String claveAcceso, String fechaNacimiento, String dni, String tipoTrabajador ) {
+    public Trabajadores(String nombre, String apellidos, String email, String claveAcceso, String fechaNacimiento, 
+        String dni, String tipoTrabajador ) {
         super(nombre, apellidos, email, claveAcceso);
         this.fechaNacimiento = fechaNacimiento;
         this.dni = dni;

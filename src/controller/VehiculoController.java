@@ -16,6 +16,9 @@ import javax.swing.table.DefaultTableModel;
 import java.util.ArrayList;
 
 import view.TrabajadoresView;
+import database.*;
+import java.sql.Connection;
+import java.sql.SQLException;
 
 public class VehiculoController {
   private boolean temp1 = false;
@@ -47,16 +50,18 @@ public class VehiculoController {
     }
 
     private VehiculoController() {
+        realizarConexion();
         this.vehiculoView = new VehiculosView();
         this.registroVehiculoView = new RegistroVehiculoView();
         this.modalAutoView = new ModalAutoView();
         this.modalCamionView = new ModalCamionView();
         this.modalMotoView = new ModalMotoView();
 
-        this.vehiculos = new ArrayList<>();
+        this.vehiculos = VehiculosDAO.getAllVehiculos();
 
         this.totalVehiculos = 0;
         this.trabajadorView = new TrabajadoresView();
+        actualizarTablaVehiculos();
 
     }
     public void start () {
@@ -67,6 +72,19 @@ public class VehiculoController {
       instance.initModalMotoView();
 
       vehiculoView.setVisible(true);
+    }
+    public void realizarConexion() {
+        try {
+            // Obtener la conexión desde la clase DatabaseConnection
+            Connection conn = DatabaseConnection.getConnection();
+            System.out.println("Conexión exitosa a la base de datos");
+
+            // Aquí puedes hacer lo que necesites con la conexión, como consultas SQL
+            // ...
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     // Inicializar eventos en VehiculoView
@@ -139,7 +157,7 @@ public class VehiculoController {
                 String matricula = registroVehiculoView.getTxtMatricula().getText();
                 String marca = registroVehiculoView.getTxtMarca().getText();
                 String modelo = registroVehiculoView.getTxtModelo().getText();
-                float precioPorDia = Float.parseFloat(registroVehiculoView.getTxtPrecioPorDia().getText());
+                double precioPorDia = Float.parseFloat(registroVehiculoView.getTxtPrecioPorDia().getText());
                 int numAsientos = (Integer) modalAutoView.getSpinnerNumAsientos().getValue();
                 int capacidadMaletero = (Integer) modalAutoView.getSpinnerCapMaletero().getValue();
                 boolean disponible = registroVehiculoView.getCheckBox().isSelected();
@@ -155,6 +173,8 @@ public class VehiculoController {
                 }
 
                 Vehiculo auto = new Auto(matricula, marca, modelo, precioPorDia, disponible, numAsientos, capacidadMaletero);
+
+                VehiculosDAO.addVehiculo(auto);
 
                 vehiculos.add(auto);
                 totalVehiculos++;
@@ -181,8 +201,8 @@ public class VehiculoController {
                 String matricula = registroVehiculoView.getTxtMatricula().getText();
                 String marca = registroVehiculoView.getTxtMarca().getText();
                 String modelo = registroVehiculoView.getTxtModelo().getText();
-                float precioPorDia = Float.parseFloat(registroVehiculoView.getTxtPrecioPorDia().getText());
-                float capacidadCarga = Float.parseFloat(modalCamionView.getTxtCapCarga().getText());
+                double precioPorDia = Float.parseFloat(registroVehiculoView.getTxtPrecioPorDia().getText());
+                double capacidadCarga = Float.parseFloat(modalCamionView.getTxtCapCarga().getText());
                 boolean dobleCabina = modalCamionView.getCheckboxDobleCabina().isSelected();
                 boolean disponible = registroVehiculoView.getCheckBox().isSelected();
 
@@ -196,6 +216,8 @@ public class VehiculoController {
                 }
 
                 Vehiculo camion = new Camion(matricula, marca, modelo, precioPorDia, disponible, capacidadCarga, dobleCabina);
+                VehiculosDAO.addVehiculo(camion);
+
                 vehiculos.add(camion);
                 totalVehiculos++;
 
@@ -221,7 +243,7 @@ public class VehiculoController {
                 String matricula = registroVehiculoView.getTxtMatricula().getText();
                 String marca = registroVehiculoView.getTxtMarca().getText();
                 String modelo = registroVehiculoView.getTxtModelo().getText();
-                float precioPorDia = Float.parseFloat(registroVehiculoView.getTxtPrecioPorDia().getText());
+                double precioPorDia = Float.parseFloat(registroVehiculoView.getTxtPrecioPorDia().getText());
                 int cilindraje = (Integer) modalMotoView.getSpinnerCilindraje().getValue();
                 boolean disponible = registroVehiculoView.getCheckBox().isSelected();
 
@@ -235,6 +257,8 @@ public class VehiculoController {
                 }
 
                 Vehiculo moto = new Motocicleta(matricula, marca, modelo, precioPorDia, disponible, cilindraje);
+                VehiculosDAO.addVehiculo(moto);
+
                 vehiculos.add(moto);
                 totalVehiculos++;
 
@@ -251,11 +275,12 @@ public class VehiculoController {
         modalMotoView.getBtnCancelar().addActionListener(e -> modalMotoView.setVisible(false));
     }
 
-    private void actualizarTablaVehiculos() {
+    public void actualizarTablaVehiculos() {
+        vehiculos = VehiculosDAO.getAllVehiculos();
         DefaultTableModel model = (DefaultTableModel) vehiculoView.getjTable1().getModel();
         model.setRowCount(0);
 
-        for (int i = 0; i < totalVehiculos; i++) {
+        for (int i = 0; i < vehiculos.size(); i++) {
             Vehiculo vehiculo = vehiculos.get(i);
             model.addRow(new Object[]{
                         vehiculo.getMatricula(),
@@ -270,7 +295,7 @@ public class VehiculoController {
     private void buscarVehiculo() {
         String matricula = vehiculoView.getTxtBuscarVehiculo().getText();
 
-        for (int i = 0; i < totalVehiculos; i++) {
+        for (int i = 0; i < vehiculos.size(); i++) {
             if (vehiculos.get(i).getMatricula().equalsIgnoreCase(matricula)) {
                 JOptionPane.showMessageDialog(vehiculoView, vehiculos.get(i).toString());
                 return;
@@ -298,7 +323,7 @@ public class VehiculoController {
         model.setRowCount(0); // Limpiar la tabla antes de llenarla
 
         // Filtrar los vehículos según el tipo seleccionado
-        for (int i = 0; i < totalVehiculos; i++) {
+        for (int i = 0; i < vehiculos.size(); i++) {
             Vehiculo vehiculo = vehiculos.get(i);
 
             // Filtrar por tipo de vehículo

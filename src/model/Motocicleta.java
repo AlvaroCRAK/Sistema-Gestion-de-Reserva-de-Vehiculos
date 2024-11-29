@@ -7,7 +7,7 @@ package model;
 public class Motocicleta extends Vehiculo {
     private int cilindraje;
 
-    public Motocicleta(String matricula, String marca, String modelo, float precioPorDia, boolean disponible, int cilindraje) {
+    public Motocicleta(String matricula, String marca, String modelo, double precioPorDia, boolean disponible, int cilindraje) {
         super(matricula, marca, modelo, precioPorDia, disponible);
         this.cilindraje = cilindraje;
     }

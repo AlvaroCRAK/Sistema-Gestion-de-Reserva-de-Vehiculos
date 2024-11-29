@@ -8,11 +8,11 @@ public class Vehiculo {
     private String matricula;
     private String marca;
     private String modelo;
-    private float precioPorDia;
+    private double precioPorDia;
     private boolean disponible;
 
     // Constructor que inicializa todos los atributos
-    public Vehiculo(String matricula, String marca, String modelo, float precioPorDia, boolean disponible) {
+    public Vehiculo(String matricula, String marca, String modelo, double precioPorDia, boolean disponible) {
         this.matricula = matricula;
         this.marca = marca;
         this.modelo = modelo;
@@ -24,7 +24,7 @@ public class Vehiculo {
     public boolean getDisponible() {
       return disponible;
     }
-    public void setDisponible() {
+    public void setDisponible(boolean disponible) {
       this.disponible = disponible;
     }
     public String getMatricula() {
@@ -51,7 +51,7 @@ public class Vehiculo {
         this.modelo = modelo;
     }
 
-    public float getPrecioPorDia() {
+    public double getPrecioPorDia() {
         return precioPorDia;
     }
 
@@ -63,12 +63,8 @@ public class Vehiculo {
         return disponible;
     }
 
-    public void setDisponible(boolean disponible) {
-        this.disponible = disponible;
-    }
-
     // Método para calcular el costo de la reserva basado en los días
-    public float calcularCostoReserva(int dias) {
+    public double calcularCostoReserva(int dias) {
         return precioPorDia * dias;
     }
 

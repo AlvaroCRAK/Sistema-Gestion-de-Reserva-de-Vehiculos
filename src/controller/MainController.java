@@ -11,6 +11,10 @@ import model.Trabajadores;
 
 import javax.swing.*;
 
+import database.*;
+import java.sql.Connection;
+import java.sql.SQLException;
+
 
 public class MainController {
 
@@ -32,6 +36,8 @@ public class MainController {
     public MainController(LoginView loginView, RegistroView registroView, VehiculosView vehiculosView,
                           RegistroVehiculoView registroVehiculoView, ModalAutoView modalAutoView,
                           ModalCamionView modalCamionView, ModalMotoView modalMotoView) {
+        realizarConexion();
+
         this.loginView = loginView;
         this.registroView = registroView;
         this.vehiculosView = vehiculosView;
@@ -44,9 +50,21 @@ public class MainController {
         trabajadoresController = TrabajadoresController.getInstance();
 
 
-
         initLoginView();
         initRegistroView();
+    }
+    public void realizarConexion() {
+        try {
+            // Obtener la conexión desde la clase DatabaseConnection
+            Connection conn = DatabaseConnection.getConnection();
+            System.out.println("Conexión exitosa a la base de datos");
+
+            // Aquí puedes hacer lo que necesites con la conexión, como consultas SQL
+            // ...
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     // Inicializar eventos en LoginView

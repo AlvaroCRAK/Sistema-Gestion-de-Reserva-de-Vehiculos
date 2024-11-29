@@ -11,6 +11,10 @@ import javax.swing.table.DefaultTableModel;
 import java.util.ArrayList;
 
 import view.VehiculosView;
+import database.*;
+import java.sql.Connection;
+import java.sql.SQLException;
+
 
 public class TrabajadoresController {
   private static TrabajadoresController instance;
@@ -34,17 +38,30 @@ public class TrabajadoresController {
   }
 
   private TrabajadoresController () {
+    realizarConexion();
     this.trabajadorView = new TrabajadoresView();
     this.registroTrabajadorView = new RegistroTrabajadorView();
-    this.trabajadores = new ArrayList<>();
+    this.trabajadores = TrabajadoresDAO.getAllTrabajadores();
     //this.totalTrabajadores = 0;
 
-    trabajadores.add(new Trabajadores("Juan", "Santiago", 
-              "a", "a", "fecha", "12342314", "Administrador"));
     actualizarTablaTrabajadores();
 
 
   }
+  public void realizarConexion() {
+      try {
+          // Obtener la conexión desde la clase DatabaseConnection
+          Connection conn = DatabaseConnection.getConnection();
+          System.out.println("Conexión exitosa a la base de datos");
+
+          // Aquí puedes hacer lo que necesites con la conexión, como consultas SQL
+          // ...
+
+      } catch (SQLException e) {
+          e.printStackTrace();
+      }
+  }
+
 
   public void start () {
     instance.initTrabajadorView();
@@ -139,6 +156,7 @@ public class TrabajadoresController {
           }
 
           Trabajadores trabajador = new Trabajadores( nombre, apellido, email, clave, fechaNacimiento, dni, tipoTrabajador);
+          TrabajadoresDAO.addTrabajador(trabajador);
           trabajadores.add(trabajador);
           //totalTrabajadores++;
 
@@ -162,6 +180,7 @@ public class TrabajadoresController {
 
   }
   private void actualizarTablaTrabajadores () {
+    trabajadores = TrabajadoresDAO.getAllTrabajadores();
     DefaultTableModel model = (DefaultTableModel) trabajadorView.getjTable().getModel();
     model.setRowCount(0);
 

@@ -5,10 +5,10 @@
 package model;
 
 public class Camion extends Vehiculo {
-    private float capacidadCarga;
+    private double capacidadCarga;
     private boolean dobleCabina;
 
-    public Camion(String matricula, String marca, String modelo, float precioPorDia, boolean disponible, float capacidadCarga, boolean dobleCabina) {
+    public Camion(String matricula, String marca, String modelo, double precioPorDia, boolean disponible, double capacidadCarga, boolean dobleCabina) {
         super(matricula, marca, modelo, precioPorDia, disponible);
         this.capacidadCarga = capacidadCarga;
         this.dobleCabina = dobleCabina;
@@ -22,7 +22,7 @@ public class Camion extends Vehiculo {
         this.dobleCabina = dobleCabina;
     }
 
-    public float getCapacidadCarga() {
+    public double getCapacidadCarga() {
         return capacidadCarga;
     }
 

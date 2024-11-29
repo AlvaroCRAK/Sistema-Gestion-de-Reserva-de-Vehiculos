@@ -12,7 +12,10 @@ import java.util.ArrayList;
 
 import view.VehiculosView;
 import model.*;
-import controller.*;
+
+import database.*;
+import java.sql.Connection;
+import java.sql.SQLException;
 
 public class ReservasController {
   private static ReservasController instance;
@@ -36,14 +39,29 @@ public class ReservasController {
   }
 
   private ReservasController () {
+    realizarConexion();
     this.reservasView = new ReservasView();
     this.registroReservasView = new RegistroReservaView();
     this.modificarReservasView = new ModificarReservas();
-    this.reservas = new ArrayList<>();
+    this.reservas = ReservaDAO.getAllReservas();
 //modificarReservasView = new ModificarReservas();
 //modificarReservasView.setVisible(true);
-
+    actualizarTablaReserva();
   }
+  public void realizarConexion() {
+      try {
+          // Obtener la conexión desde la clase DatabaseConnection
+          Connection conn = DatabaseConnection.getConnection();
+          System.out.println("Conexión exitosa a la base de datos");
+
+          // Aquí puedes hacer lo que necesites con la conexión, como consultas SQL
+          // ...
+
+      } catch (SQLException e) {
+          e.printStackTrace();
+      }
+  }
+
 
   public void start () {
     instance.initReservasView();
@@ -91,56 +109,55 @@ public class ReservasController {
             String id = modificarReservasView.getTextIdReserva().getText();
             double pago = Double.parseDouble(modificarReservasView.getTextPago().getText());
 
-            boolean temp = true;
-            for (int i = 0; i < reservas.size(); i++) {
-                if (id.equals(reservas.get(i).getId())) {
-                    temp = false;
-                    break;
-                }
-            }
+            if (id.isEmpty()) throw new Exception("El ID de la reserva no puede estar vacío");
+            if (pago <= 0) throw new Exception("El monto del pago debe ser mayor a 0");
 
-            if (temp) 
-                throw new Exception("No se encontró una reserva con ese ID");
 
-            if (pago <= 0) 
-                throw new Exception("El pago es incorrecto");
+            // Buscar reserva
+            Reserva reserva = buscarReserva(id);
+            if ( reserva == null ) throw new Exception("Reserva no identificada");
 
-            Reserva reserva = null;
-            for (int i = 0; i < reservas.size(); i++) {
-                if (reservas.get(i).getId().equals(id)) {
-                    reserva = reservas.get(i);
-                    break;
-                }
-            }
-
+            // Actualizar monto actual y verificar estado
+            System.out.println(reserva.getMontoActual()); // 0
             reserva.setMontoActual(reserva.getMontoActual() + pago);
+            System.out.println(reserva.getMontoActual()); // 500
+            String matricula = reserva.getVehiculoId();
 
             if (reserva.getMontoActual() >= reserva.getMontoTotal()) {
                 reserva.setCancelado(true);
-                reserva.setMontoActual(reserva.getMontoActual());
-                if (reserva.getMontoActual() > reserva.getMontoTotal()) {
-                    JOptionPane.showMessageDialog(modificarReservasView, "Pago con éxito, devolver vuelto: " +
-                        (reserva.getMontoActual() - reserva.getMontoTotal()));
-                    modificarReservasView.setVisible(false);
-                    reservasView.setVisible(true);
-                } else {
-                    JOptionPane.showMessageDialog(modificarReservasView, "Pago TOTAL con éxito");
-                      modificarReservasView.setVisible(false);
-                      reservasView.setVisible(true);
-                }
+                VehiculosDAO.updateDisponibilidad(matricula, true);
+                JOptionPane.showMessageDialog(modificarReservasView,
+                    reserva.getMontoActual() > reserva.getMontoTotal()
+                        ? "Pago con éxito, devolver vuelto: " + (reserva.getMontoActual() - reserva.getMontoTotal())
+                        : "Pago TOTAL con éxito");
+                reserva.setMontoActual(reserva.getMontoTotal());
+                VehiculosDAO.updateDisponibilidad(reserva.getVehiculoId(), true);
             } else {
                 JOptionPane.showMessageDialog(modificarReservasView, "Pago con éxito, aún debe: " +
                     (reserva.getMontoTotal() - reserva.getMontoActual()));
-                      modificarReservasView.setVisible(false);
-                      reservasView.setVisible(true);
             }
+
+            // Actualizar base de datos
+            ReservaDAO.updateMontoActual(reserva.getId(), reserva.getMontoActual());
+            ReservaDAO.updateCancelado(reserva.getId(), reserva.getCancelado());
+
+            // Actualizar vista
+            reservas.clear();
+            reservas = ReservaDAO.getAllReservas();
+
             actualizarTablaReserva();
+
+            VehiculoController vehiculoController = VehiculoController.getInstance();
+            vehiculoController.actualizarTablaVehiculos();
+
+            modificarReservasView.setVisible(false);
+            reservasView.setVisible(true);
 
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(modificarReservasView, "Error al modificar reserva: " + ex.getMessage());
         }
     });
-
+    
     modificarReservasView.getBtnCancelar().addActionListener( e -> {
       modificarReservasView.setVisible(false);
       reservasView.setVisible(true);
@@ -158,6 +175,12 @@ public class ReservasController {
     }
 
     JOptionPane.showMessageDialog(reservasView, "Reserva no encontrado.");
+  }
+  private Reserva buscarReserva(String id) {
+    for ( int i = 0; i < reservas.size(); i++ ) 
+      if ( reservas.get(i).getId().equals(id) )
+        return reservas.get(i);
+    return null;
   }
   private void filtrarReserva() {
     String tipoReserva = (String) reservasView.getComboBox().getSelectedItem();
@@ -208,10 +231,14 @@ public class ReservasController {
 
           if ( vehiculo.getDisponible() == false ) 
             throw new Exception ("Vehiculo no disponible");
-          if ( cliente.getTipoTrabajador() != "Cliente" )
-            throw new Exception ( "La reserva debe ser de Cliente");
+          if ( !cliente.getTipoTrabajador().equals("Cliente") )
+            throw new Exception ( "La reserva debe ser de un Cliente");
+
+          vehiculo.setDisponible(false);
 
           Reserva  reserva = new Reserva(diasReservados, cliente, vehiculo);
+          VehiculosDAO.updateDisponibilidad(matriculaVehiculo, false);
+          ReservaDAO.addReserva(reserva);
           reservas.add(reserva);
           //totalReserva++;
 
@@ -232,9 +259,11 @@ public class ReservasController {
         registroReservasView.setVisible(false);
         reservasView.setVisible(true);
     });
+    actualizarTablaReserva();
 
   }
   private void actualizarTablaReserva () {
+    reservas = ReservaDAO.getAllReservas();
     DefaultTableModel model = (DefaultTableModel) reservasView.getTabla().getModel();
     model.setRowCount(0);
 
